@@ -35,10 +35,6 @@ Some virtual UF2 drives may reject the browser's temporary-file/write-stream imp
 
 Filesystem integration checks used disposable disk fixtures with the supplied backups. They verified drive identification, fresh reads, a complete two-file save, preservation of the firmware file, ZIP backup integrity, missing slots, wrong boards, and both first-write and partial-write failures. No connected physical synth was written during development. Browser visual QA remains blocked by the browser tool's local-file URL policy.
 
-## Decoded example
-
-`SAMPLE3-decoded.wav` is the supplied SAMPLE3 audio decoded to a standard WAV file, with no gain, trimming or resampling changes. It contains 2,097,152 mono frames at 32,000 Hz, or 65.536 seconds. The latest valid metadata describes eight pitched slices with notes 12 through 19 and one-shot playback. Exact offsets and validation results are in `format-analysis.json`.
-
 ## Format
 
 The codec was checked against the public Plinky firmware at commit `ee4a340fe66fd2705299b4c15381acec44008f42`:
@@ -70,3 +66,5 @@ PRESETS has 522,240 payload bytes starting at 0x08080000: 255 flash journal page
 
 Checksum starts at 123; for the first 2,040 bytes, set `hash = (hash * 23 + byte) & 0xFFFF`. The editor preserves page sequence, padding, system settings and every other page. It regenerates sample waveform peaks, metadata and checksum. Plinky's note display adds one octave: internal 0 is shown as C1.
 
+## How this tool was created
+AI slopware :-) - Using Chat GPT-6.1 Sol (Medium) with the one shot single prompt "Plinky v3 synth can record samples via its TTRS interface, and then store them as .uf2 files. Create webtool that allows the creation of Plinky V3 compatible .UF2 samples offline. Here is an existing presets file and sample file I recorded for reference. Add support for connecting to a Plinky that is in filesystem access mode. Document the design, mentioning that it is not affiliated with, endorsed by, or sponsored by Making Sound Machines or the Plinky project"
