@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sample Lab v3 — Independent sample editor</title>
+<style>
+:root{--bg:#f4f1e9;--ink:#242332;--muted:#706c7c;--purple:#7060ca;--line:#ddd9e3}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif}main{max-width:1190px;margin:auto;padding:35px 30px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:22px}.brand{font-weight:800;font-size:19px;letter-spacing:-.7px}.brand span{color:var(--purple)}.badge{font:11px ui-monospace,monospace;letter-spacing:1px;color:#52715b;background:#e4ecdf;padding:7px 11px;border-radius:20px}h1{font-size:clamp(34px,5vw,55px);letter-spacing:-2px;line-height:1.08;margin:35px 0 12px}p{color:var(--muted)}.intro{max-width:630px;margin-bottom:30px}.layout{display:grid;grid-template-columns:290px 1fr;gap:22px}.card{background:#fffefa;border:1px solid var(--line);border-radius:16px;padding:23px;margin-bottom:20px}h2{font-size:16px;margin:0 0 16px}h3{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin:0 0 15px}.step{font:11px ui-monospace,monospace;color:var(--purple);margin-right:8px}.upload{border:1px dashed #b9b0d4;background:#f5f2fd;padding:18px 14px;border-radius:10px;display:block;cursor:pointer;margin-bottom:15px}.upload strong{display:block;margin-bottom:5px}.upload small{color:var(--muted)}input[type=file]{display:block;width:100%;font-size:11px;margin-top:12px}label{display:block;font-size:12px;color:var(--muted);margin-bottom:12px}input[type=number],select{display:block;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;color:var(--ink);background:#fffefa;margin-top:5px;font:inherit}input[type=checkbox]{accent-color:var(--purple)}.row{display:flex;gap:12px;align-items:end}.row>*{flex:1}.small{font-size:12px}.statbar{display:flex;gap:24px;flex-wrap:wrap;margin:15px 0 22px}.statbar b{font-size:22px;display:block;font-weight:600}.statbar span{font:10px ui-monospace,monospace;text-transform:uppercase;color:var(--muted)}.wave{background:#252237;border-radius:12px;overflow:hidden;position:relative}canvas{display:block;width:100%;height:195px;cursor:crosshair}.wavehint{color:#b4accb;font:10px ui-monospace,monospace;padding:0 15px 10px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button{border:1px solid var(--line);background:#fffefa;color:var(--ink);border-radius:8px;padding:10px 15px;font:600 12px system-ui;cursor:pointer}button:hover{border-color:var(--purple);background:#f4f0ff}button:disabled{opacity:.4;cursor:default}.primary{background:var(--purple);color:white;border-color:var(--purple)}.primary:hover{background:#5d4eb4;color:white}.slicegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.slice{border:1px solid var(--line);padding:12px;border-radius:10px}.slice.active{border-color:var(--purple);background:#f4f0ff}.slice button{padding:4px 7px;float:right}.slice strong{font:11px ui-monospace,monospace}.slice label{margin:9px 0 0;font-size:10px}.slice input{padding:6px;font-size:12px}.notice{background:#ece8f7;border-left:3px solid var(--purple);padding:13px 15px;font-size:12px;color:#514865;border-radius:3px;margin-top:17px}.status{padding:12px 0;min-height:45px;color:#65559c;font-size:13px;white-space:pre-wrap}.error{color:#a83c42}.export{background:#eae5f5}.export p{font-size:12px}footer{border-top:1px solid var(--line);padding:20px 0;color:var(--muted);font-size:11px}details{margin-top:12px;font-size:12px;color:var(--muted)}a{color:#6552b3}@media(max-width:800px){main{padding:22px 16px}.layout{grid-template-columns:1fr}.slicegrid{grid-template-columns:repeat(2,1fr)}h1{letter-spacing:-1px}.card{padding:18px}}
+</style></head><body><main>
+<header><div class="brand">sample lab<span> / </span>v3</div><div class="badge">● OFFLINE · LOCAL AUDIO</div></header>
+<h1>A little sound.<br>Eight new possibilities.</h1><p class="intro">Prepare audio for your Plinky v3. Shape a sample, set eight slices, and take it back to the synth. Everything happens on your computer.</p>
+<div class="notice" role="note" style="margin:0 0 26px"><strong>Independent &amp; unofficial.</strong> Sample Lab v3 is an independent, unofficial tool. It is not affiliated with, endorsed by, or sponsored by Making Sound Machines or the Plinky project. Plinky is mentioned only to identify device compatibility.</div>
+<div class="layout"><aside>
+<section class="card"><h2><span class="step">USB</span>Mounted Plinky drive</h2><button id="connectDrive" class="primary">Connect Plinky drive</button><p id="driveState" class="small" role="status">Select the mounted USB drive once to allow access.</p><div class="toolbar"><button id="loadDrive" disabled>Load selected slot</button><button id="backupDrive" disabled>Back up selected slot</button><button id="disconnectDrive" disabled>Disconnect</button></div><p class="small">Hold the encoder while connecting USB, then select the root of the Plinky volume. Browsers cannot discover mounted drives without your selection.</p></section>
+<section class="card"><h2><span class="step">01</span>Bring your sound</h2><label class="upload"><strong>Audio or sample UF2</strong><small>WAV recommended · other browser-supported audio accepted</small><input id="audioFile" type="file" accept="audio/*,.uf2"></label><label class="upload"><strong>Presets backup</strong><small>Load PRESETS.UF2 to read and update slice metadata.</small><input id="presetFile" type="file" accept=".uf2"></label><label>Destination slot (UF2 numbering)<select id="slot"></select></label><p id="presetState" class="small">No presets backup loaded.</p></section>
+<section class="card"><h2><span class="step">02</span>Shape the audio</h2><div class="row"><label>Start · seconds<input id="trimStart" type="number" min="0" value="0" step="0.001"></label><label>End · seconds<input id="trimEnd" type="number" min="0" value="0" step="0.001"></label></div><label><input id="normalize" type="checkbox"> Normalize peak to −1 dBFS</label><label><input id="reverse" type="checkbox"> Reverse audio</label><label>Fade each end · milliseconds<input id="fade" type="number" min="0" max="5000" value="5" step="1"></label><button id="apply" disabled>Apply & reset slices</button><p class="small">Edits apply to the imported source. Maximum 65.536 seconds; longer files must be trimmed.</p></section>
+</aside><div>
+<section class="card"><h3>Sample workspace</h3><div class="statbar"><div><b id="duration">—</b><span>seconds</span></div><div><b>32 kHz</b><span>mono · 16-bit PCM</span></div><div><b id="sourceName">No sound loaded</b><span id="frameCount">Drop into the input to begin</span></div></div><div class="wave"><canvas id="wave" aria-label="Audio waveform. Click to move the selected slice start." role="img"></canvas><div class="wavehint">SELECT A SLICE BELOW · CLICK THE WAVEFORM TO SET ITS START</div></div><div class="toolbar"><button id="play" disabled>▶ Play all</button><button id="stop">■ Stop</button><button id="even" disabled>Space slices evenly</button><button id="wav" disabled>↓ WAV</button></div><div id="status" class="status" role="status" aria-live="polite">Ready when you are. Load a sample or an audio file.</div></section>
+<section class="card"><h2><span class="step">03</span>Find your slices</h2><div id="slices" class="slicegrid"></div><div class="row" style="margin-top:18px"><label><input id="pitched" type="checkbox" checked> Pitched multisample</label><label>Playback<select id="loop"><option value="0">One shot</option><option value="1">Loop slice</option><option value="2">One shot · whole sample bounds</option><option value="3">Loop whole sample</option></select></label></div><p class="small">Note numbers use Plinky’s internal scale: 0 displays as C1; 12 as C2. The next slice start sets this slice’s end. Click a slice number to select it.</p></section>
+<section class="card export"><h2><span class="step">04</span>Back to Plinky</h2><p>Export both files for new audio or changed slices. Load a fresh presets backup from your synth first: the presets export contains that entire backup with this slot’s metadata updated.</p><div class="toolbar"><button id="sampleOut" class="primary" disabled>↓ SAMPLE0.UF2</button><button id="presetOut" disabled>↓ Updated PRESETS.UF2</button></div><div class="toolbar"><button id="saveDrive" class="primary" disabled>Save both UF2 files to Plinky…</button></div><p class="small">Direct save first downloads a ZIP backup of the current slot and presets. It then updates the selected slot using freshly read presets from the connected drive. If the browser or bootloader rejects direct writes, use the download buttons above and copy both files manually.</p><div class="notice">Back up your Plinky first. Enter its USB drive mode, copy both exported files to the drive, wait for writing to finish, then restart with the encoder. UF2 addresses determine which slot is written; renaming a file does not move it.</div><details><summary>Format & compatibility</summary><p>For the original STM32 Plinky v3 / Plinky+ format, not Plinky 12. A slot has 2,097,152 signed little-endian PCM frames at 32,000 Hz. Slice metadata is stored in 2,048-byte journal pages in PRESETS.UF2. This editor verifies page checksums, edits the latest valid page for the chosen slot, preserves its sequence and other settings, and regenerates its waveform and checksum. Sample-only import cannot recover the recorded length without matching presets; the full 65.536-second slot is used.</p><p>Implementation checked against <a href="https://github.com/plinkysynth/plinky_public/tree/ee4a340fe66fd2705299b4c15381acec44008f42">Plinky’s public firmware</a>. Hardware playback has not been tested. No network calls, external libraries, or uploads. Direct drive access uses the browser folder picker when available; it does not use WebUSB. Browser stream closure does not verify physical flash contents. Wait for Plinky’s write activity to finish before restarting.</p></details></section>
+</div></div><footer>SAMPLE LAB V3 · Independent &amp; unofficial. Not affiliated with or endorsed by Making Sound Machines or the Plinky project. · Keep your original backups</footer>
+</main><script>
+/** @file Plinky v3 UF2 codec, derived from public firmware structures. */
+const Plinky = (() => {
+    const RATE = 32000, FRAMES = 2097152, BANK = 4194304, PRESET_BASE = 0x08080000, PRESET_SIZE = 522240;
+    /** @param {Uint8Array} bytes Input UF2. @returns {{base:number,data:Uint8Array}} Validated image. */
+    function unpack(bytes)
+    {
+        if (!bytes.length || bytes.length % 512)
+        {
+            throw Error('UF2 size must be a nonzero multiple of 512.');
+        }
+        const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), count = bytes.length / 512,
+              blocks = [], seen = new Set();
+        let base = Infinity, end = 0;
+        for (let i = 0; i < count; i++)
+        {
+            const o = i * 512, addr = v.getUint32(o + 12, true), size = v.getUint32(o + 16, true),
+                  n = v.getUint32(o + 20, true);
+            if (v.getUint32(o, true) !== 0x0a324655 || v.getUint32(o + 4, true) !== 0x9e5d5157 ||
+                v.getUint32(o + 508, true) !== 0x0ab16f30)
+            {
+                throw Error('Invalid UF2 magic.');
+            }
+            if (v.getUint32(o + 8, true) !== 0 || v.getUint32(o + 28, true) !== 0 || size !== 256 ||
+                addr % 256 || v.getUint32(o + 24, true) !== count || n >= count || seen.has(n))
+            {
+                throw Error('Unsupported or inconsistent Plinky UF2 block.');
+            }
+            seen.add(n);
+            blocks.push({o, addr});
+            base = Math.min(base, addr);
+            end = Math.max(end, addr + size);
+        }
+        const sample = base >= 0x40000000 && base <= 0x41c00000 && (base - 0x40000000) % BANK === 0 &&
+                       end - base === BANK;
+        if (!sample && !(base === PRESET_BASE && end - base === PRESET_SIZE))
+        {
+            throw Error('Expected a complete SAMPLE0–7.UF2 or PRESETS.UF2 backup.');
+        }
+        if ((end - base) / 256 !== count)
+        {
+            throw Error('Incomplete UF2 image.');
+        }
+        const data = new Uint8Array(end - base), addresses = new Set();
+        for (const b of blocks)
+        {
+            if (addresses.has(b.addr))
+            {
+                throw Error('Overlapping UF2 blocks.');
+            }
+            addresses.add(b.addr);
+            data.set(bytes.subarray(b.o + 32, b.o + 288), b.addr - base);
+        }
+        return {base, data};
+    }
+    /**
+     * @param {Uint8Array} data Aligned image. @param {number} base Address. @returns {Uint8Array} UF2 file.
+     */
+    function pack(data, base)
+    {
+        if (!data.length || data.length % 256)
+        {
+            throw Error('Image must be 256-byte aligned.');
+        }
+        const count = data.length / 256, bytes = new Uint8Array(count * 512), v = new DataView(bytes.buffer);
+        for (let i = 0; i < count; i++)
+        {
+            const o = i * 512;
+            [0x0a324655, 0x9e5d5157, 0, base + i * 256, 256, i, count, 0].forEach(
+                (x, j) => v.setUint32(o + j * 4, x, true));
+            bytes.set(data.subarray(i * 256, (i + 1) * 256), o + 32);
+            v.setUint32(o + 508, 0x0ab16f30, true);
+        }
+        return bytes;
+    }
+    /** @param {Uint8Array} data Flash page. @returns {number} Firmware checksum. */
+    function hash(data)
+    {
+        let h = 123;
+        for (let i = 0; i < 2040; i++)
+        {
+            h = (h * 23 + data[i]) & 65535;
+        }
+        return h;
+    }
+    /** @param {Uint8Array} data Preset image. @returns {Map} Latest valid journal pages. */
+    function pages(data)
+    {
+        const found = new Map();
+        for (let o = 0; o < data.length; o += 2048)
+        {
+            const p = data.subarray(o, o + 2048), v = new DataView(p.buffer, p.byteOffset, p.length),
+                  idx = p[2040], seq = v.getUint32(2044, true);
+            if (idx < 136 && p[2041] === 2 && v.getUint16(2042, true) === hash(p) &&
+                (!found.has(idx) || seq > found.get(idx).seq))
+            {
+                found.set(idx, {o, seq});
+            }
+        }
+        return found;
+    }
+    /**
+     * @param {Uint8Array} data Presets. @param {number} slot Sample index. @returns {object|null} Sample
+     *     metadata.
+     */
+    function metadata(data, slot)
+    {
+        const entry = pages(data).get(128 + slot);
+        if (!entry)
+        {
+            return null;
+        }
+        const v = new DataView(data.buffer, data.byteOffset + entry.o, 2048);
+        const length = v.getInt32(1056, true),
+              splits = Array.from({length : 8}, (_, i) => v.getInt32(1024 + i * 4, true));
+        if (length < 1 || length > FRAMES ||
+            splits.some((s, i) => s < 0 || s >= length || (i > 0 && s < splits[i - 1])))
+        {
+            throw Error('Sample metadata has invalid length or slice positions.');
+        }
+        return {
+            length,
+            splits,
+            notes : Array.from({length : 8}, (_, i) => v.getInt8(1060 + i)),
+            pitched : !!v.getUint8(1068),
+            loop : v.getUint8(1069) & 3
+        };
+    }
+    /**
+     * @param {Uint8Array} raw PCM bytes. @param {number} length Frame count. @returns {Float32Array} Audio.
+     */
+    function pcm(raw, length)
+    {
+        const v = new DataView(raw.buffer, raw.byteOffset, raw.length), audio = new Float32Array(length);
+        for (let i = 0; i < length; i++)
+        {
+            audio[i] = v.getInt16(i * 2, true) / 32768;
+        }
+        return audio;
+    }
+    /** @param {Float32Array} audio Mono frames. @returns {Uint8Array} Full padded slot. */
+    function raw(audio)
+    {
+        if (!audio.length || audio.length > FRAMES)
+        {
+            throw Error('Sample must contain 1–2097152 frames.');
+        }
+        const bytes = new Uint8Array(BANK), v = new DataView(bytes.buffer);
+        for (let i = 0; i < audio.length; i++)
+        {
+            v.setInt16(i * 2, Math.max(-32768, Math.min(32767, Math.round(audio[i] * 32768))), true);
+        }
+        return bytes;
+    }
+    /**
+     * @param {Uint8Array} baseline Original presets. @param {number} slot Destination. @param {Float32Array}
+     *     audio Frames. @param {object} meta Metadata. @returns {Uint8Array} Patched presets.
+     */
+    function patch(baseline, slot, audio, meta)
+    {
+        const entry = pages(baseline).get(128 + slot);
+        if (!entry)
+        {
+            throw Error(
+                'No valid metadata page for this slot in the backup. Record/save that slot on Plinky first.');
+        }
+        if (meta.splits.length !== 8 || meta.notes.length !== 8 ||
+            meta.splits.some((s, i) => !Number.isInteger(s) || s < 0 || s >= audio.length ||
+                                       (i > 0 && s < meta.splits[i - 1])) ||
+            meta.notes.some(n => !Number.isInteger(n) || n < 0 || n > 96))
+        {
+            throw Error('Slice positions must be ordered and inside the audio; notes must be 0–96.');
+        }
+        const data = baseline.slice(), p = data.subarray(entry.o, entry.o + 2048),
+              v = new DataView(p.buffer, p.byteOffset, p.length);
+        p.fill(0, 0, 1024);
+        for (let i = 0; i < audio.length; i++)
+        {
+            const bin = Math.floor(i / 1024), shift = (bin & 1) * 4,
+                  peak = Math.min(15, Math.floor(Math.abs(Math.round(audio[i] * 32768)) / 1024));
+            p[bin >> 1] =
+                (p[bin >> 1] & ~(15 << shift)) | (Math.max((p[bin >> 1] >> shift) & 15, peak) << shift);
+        }
+        meta.splits.forEach((s, i) => v.setInt32(1024 + i * 4, s, true));
+        v.setInt32(1056, audio.length, true);
+        meta.notes.forEach((n, i) => v.setInt8(1060 + i, n));
+        v.setUint8(1068, meta.pitched ? 1 : 0);
+        v.setUint8(1069, meta.loop);
+        v.setUint16(2042, hash(p), true);
+        return data;
+    }
+    /** @param {Float32Array} audio Audio. @returns {Uint8Array} PCM WAV. */
+    function wav(audio)
+    {
+        const bytes = new Uint8Array(44 + audio.length * 2), v = new DataView(bytes.buffer);
+        const tag = (s, o) => Array.from(s).forEach((c, i) => { bytes[o + i] = c.charCodeAt(0); });
+        tag('RIFF', 0);
+        v.setUint32(4, bytes.length - 8, true);
+        tag('WAVEfmt ', 8);
+        v.setUint32(16, 16, true);
+        v.setUint16(20, 1, true);
+        v.setUint16(22, 1, true);
+        v.setUint32(24, RATE, true);
+        v.setUint32(28, RATE * 2, true);
+        v.setUint16(32, 2, true);
+        v.setUint16(34, 16, true);
+        tag('data', 36);
+        v.setUint32(40, audio.length * 2, true);
+        bytes.set(raw(audio).subarray(0, audio.length * 2), 44);
+        return bytes;
+    }
+    return {RATE, FRAMES, BANK, PRESET_BASE, unpack, pack, hash, pages, metadata, pcm, raw, patch, wav};
+})();
+
+/** @file Mounted Plinky drive access through the browser File System Access API. */
+const PlinkyDrive = (() => {
+    /** @param {FileSystemFileHandle} handle File handle. @returns {Promise<Uint8Array>} File bytes. */
+    async function read(handle)
+    {
+        return new Uint8Array(await (await handle.getFile()).arrayBuffer());
+    }
+    /**
+     * @param {FileSystemDirectoryHandle} directory User-selected directory. @returns {Promise<object>}
+     *     Validated drive session.
+     */
+    async function connect(directory)
+    {
+        const files = new Map();
+        for await (const handle of directory.values())
+        {
+            if (handle.kind === 'file')
+            {
+                files.set(handle.name.toUpperCase(), handle);
+            }
+        }
+        if (!files.has('INFO_UF2.TXT') || !files.has('PRESETS.UF2'))
+        {
+            throw Error(
+                'Choose the root of the mounted Plinky UF2 drive, containing INFO_UF2.TXT and PRESETS.UF2.');
+        }
+        const info = await (await files.get('INFO_UF2.TXT').getFile()).text();
+        if (!/Board-ID:\s*STM32L476-Plinky-v3\b/i.test(info))
+        {
+            throw Error('This drive does not identify as an STM32 Plinky v3 UF2 bootloader.');
+        }
+        const original = await read(files.get('PRESETS.UF2'));
+        const image = Plinky.unpack(original);
+        if (image.base !== Plinky.PRESET_BASE || !Plinky.pages(image.data).size)
+        {
+            throw Error('The drive has no valid Plinky presets backup.');
+        }
+        const slots = [];
+        for (let slot = 0; slot < 8; slot++)
+        {
+            if (files.has('SAMPLE' + slot + '.UF2'))
+            {
+                slots.push(slot);
+            }
+        }
+        if (!slots.length)
+        {
+            throw Error('No SAMPLE0–7.UF2 files found on this drive.');
+        }
+        return {directory, files, slots, presets : image.data};
+    }
+    /**
+     * @param {object} session Drive session. @param {number} slot UF2 slot. @returns {Promise<object>} Fresh
+     *     backups and decoded images.
+     */
+    async function snapshot(session, slot)
+    {
+        const sampleHandle = session.files.get('SAMPLE' + slot + '.UF2');
+        if (!sampleHandle)
+        {
+            throw Error('The selected sample slot is missing from this drive.');
+        }
+        const [sampleBytes, presetBytes] =
+            await Promise.all([ read(sampleHandle), read(session.files.get('PRESETS.UF2')) ]);
+        const sample = Plinky.unpack(sampleBytes), presets = Plinky.unpack(presetBytes);
+        if (sample.base !== 0x40000000 + slot * Plinky.BANK || presets.base !== Plinky.PRESET_BASE)
+        {
+            throw Error('Drive file addresses do not match the selected Plinky slot.');
+        }
+        return {sampleBytes, presetBytes, sample, presets};
+    }
+    /**
+     * @param {FileSystemFileHandle} handle Existing file. @param {Uint8Array} bytes
+     *     Content. @returns {Promise<void>} Resolves after stream closure.
+     */
+    async function write(handle, bytes)
+    {
+        const stream = await handle.createWritable({keepExistingData : false});
+        try
+        {
+            await stream.write(bytes);
+            await stream.close();
+        }
+        catch (error)
+        {
+            try
+            {
+                await stream.abort();
+            }
+            catch (_)
+            { /* The stream may already be closed. */
+            }
+            throw error;
+        }
+    }
+    /**
+     * @param {object} session Drive session. @param {number} slot Destination. @param {Uint8Array} sample
+     *     Sample UF2. @param {Uint8Array} presets Presets UF2. @param {function(string):void} progress
+     *     Progress callback. @returns {Promise<void>} Writes both files in order.
+     */
+    async function save(session, slot, sample, presets, progress)
+    {
+        let stage = 'sample';
+        try
+        {
+            progress('Writing SAMPLE' + slot + '.UF2… Keep Plinky connected.');
+            await write(session.files.get('SAMPLE' + slot + '.UF2'), sample);
+            stage = 'presets';
+            progress('Sample stream closed. Writing PRESETS.UF2… Keep Plinky connected.');
+            await write(session.files.get('PRESETS.UF2'), presets);
+        }
+        catch (error)
+        {
+            throw Error(
+                (stage === 'presets' ? 'Sample was written, but presets did not finish. '
+                                     : 'Sample write did not finish; presets were not written. ') +
+                'Keep USB mode active and copy both downloaded UF2 files manually before restarting. ' +
+                error.message);
+        }
+    }
+    /**
+     * @param {Array<{name:string,bytes:Uint8Array}>} files Backup entries. @returns {Uint8Array}
+     *     Uncompressed ZIP archive.
+     */
+    function archive(files)
+    {
+        const parts = [], central = [];
+        let offset = 0, directorySize = 0;
+        for (const file of files)
+        {
+            const name = new TextEncoder().encode(file.name), bytes = file.bytes;
+            let crc = 0xffffffff;
+            for (const byte of bytes)
+            {
+                crc ^= byte;
+                for (let bit = 0; bit < 8; bit++)
+                {
+                    crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+                }
+            }
+            crc = (crc ^ 0xffffffff) >>> 0;
+            const header = new Uint8Array(30 + name.length), v = new DataView(header.buffer);
+            v.setUint32(0, 0x04034b50, true);
+            v.setUint16(4, 20, true);
+            v.setUint16(12, 33, true);
+            v.setUint32(14, crc, true);
+            v.setUint32(18, bytes.length, true);
+            v.setUint32(22, bytes.length, true);
+            v.setUint16(26, name.length, true);
+            header.set(name, 30);
+            const record = new Uint8Array(46 + name.length), c = new DataView(record.buffer);
+            c.setUint32(0, 0x02014b50, true);
+            c.setUint16(4, 20, true);
+            c.setUint16(6, 20, true);
+            c.setUint16(14, 33, true);
+            c.setUint32(16, crc, true);
+            c.setUint32(20, bytes.length, true);
+            c.setUint32(24, bytes.length, true);
+            c.setUint16(28, name.length, true);
+            c.setUint32(42, offset, true);
+            record.set(name, 46);
+            parts.push(header, bytes);
+            central.push(record);
+            offset += header.length + bytes.length;
+            directorySize += record.length;
+        }
+        const end = new Uint8Array(22), v = new DataView(end.buffer);
+        v.setUint32(0, 0x06054b50, true);
+        v.setUint16(8, files.length, true);
+        v.setUint16(10, files.length, true);
+        v.setUint32(12, directorySize, true);
+        v.setUint32(16, offset, true);
+        const result = new Uint8Array(offset + directorySize + end.length);
+        let position = 0;
+        for (const part of [...parts, ...central, end])
+        {
+            result.set(part, position);
+            position += part.length;
+        }
+        return result;
+    }
+    return {connect, snapshot, save, archive};
+})();
+
+/** @file Browser controls for the standalone sample workshop. */
+const el = id => document.getElementById(id);
+let audio = null, source = null, baseline = null, selected = 0, splits = [],
+    notes = [ 0, 0, 0, 0, 0, 0, 0, 0 ], context = null, playing = null, importedSlot = null;
+/** @param {string} message Status. @param {boolean} error Error state. @returns {void} */
+function status(message, error = false)
+{
+    el('status').textContent = message;
+    el('status').classList.toggle('error', error);
+}
+/** @returns {AudioContext} Shared audio context. */
+function ctx()
+{
+    if (!context)
+    {
+        context = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return context;
+}
+/** @returns {void} Stop playback. */
+function stop()
+{
+    if (playing)
+    {
+        playing.stop();
+        playing = null;
+    }
+}
+/** @param {number} start First frame. @param {number} end Exclusive end. @returns {Promise<void>} */
+async function play(start = 0, end = audio.length)
+{
+    stop();
+    const c = ctx();
+    await c.resume();
+    const b = c.createBuffer(1, end - start, Plinky.RATE);
+    b.copyToChannel(audio.subarray(start, end), 0);
+    playing = c.createBufferSource();
+    playing.buffer = b;
+    playing.connect(c.destination);
+    playing.start();
+}
+/** @returns {void} Draw waveform and slice markers. */
+function draw()
+{
+    const canvas = el('wave'), dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = 195;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const c = canvas.getContext('2d');
+    c.scale(dpr, dpr);
+    c.fillStyle = '#252237';
+    c.fillRect(0, 0, w, h);
+    c.strokeStyle = '#48415c';
+    c.beginPath();
+    c.moveTo(0, h / 2);
+    c.lineTo(w, h / 2);
+    c.stroke();
+    if (!audio)
+    {
+        c.fillStyle = '#b4accb';
+        c.font = '13px system-ui';
+        c.fillText('Your next sound starts here', 22, h / 2 - 15);
+        return;
+    }
+    c.strokeStyle = '#b5a3ef';
+    c.beginPath();
+    for (let x = 0; x < w; x++)
+    {
+        let low = 0, high = 0;
+        const begin = Math.floor(x * audio.length / w), end = Math.floor((x + 1) * audio.length / w);
+        for (let i = begin; i < end; i++)
+        {
+            low = Math.min(low, audio[i]);
+            high = Math.max(high, audio[i]);
+        }
+        c.moveTo(x, h / 2 - high * 82);
+        c.lineTo(x, h / 2 - low * 82);
+    }
+    c.stroke();
+    splits.forEach((s, i) => {
+        const x = s / audio.length * w;
+        c.strokeStyle = i === selected ? '#f0d695' : '#786895';
+        c.beginPath();
+        c.moveTo(x, 0);
+        c.lineTo(x, h);
+        c.stroke();
+        c.fillStyle = c.strokeStyle;
+        c.font = '11px monospace';
+        c.fillText(String(i + 1), x + 5, 17);
+    });
+}
+/** @returns {void} Rebuild slice inputs. */
+function render()
+{
+    el('slices').replaceChildren();
+    for (let i = 0; i < 8; i++)
+    {
+        const box = document.createElement('div');
+        box.className = 'slice' + (i === selected ? ' active' : '');
+        box.innerHTML = `<strong><button class="selectSlice" aria-label="Select slice ${i + 1}">${
+            String(i + 1).padStart(2,
+                                   '0')}</button></strong><button class="audition" aria-label="Play slice ${
+            i +
+            1}">▶</button><div style="clear:both"></div><label>Start · seconds<input class="sliceStart" type="number" min="0" step="0.00003125"></label><label>Plinky note · 0–96<input class="note" type="number" min="0" max="96" step="1"></label>`;
+        const start = box.querySelector('.sliceStart'), note = box.querySelector('.note');
+        start.value = ((splits[i] || 0) / Plinky.RATE).toFixed(5);
+        note.value = notes[i];
+        start.disabled = note.disabled = !audio;
+        box.querySelector('.selectSlice').onclick = () => {
+            selected = i;
+            render();
+        };
+        box.querySelector('.audition').disabled = !audio;
+        box.querySelector('.audition').onclick = () =>
+            play(splits[i], i === 7 ? audio.length : splits[i + 1]).catch(e => status(e.message, true));
+        start.onchange = () => {
+            const n = Math.round(Number(start.value) * Plinky.RATE), low = i ? splits[i - 1] : 0,
+                  high = i === 7 ? audio.length - 1 : splits[i + 1];
+            if (!Number.isFinite(n) || n < low || n > high)
+            {
+                status('Keep slice starts ordered and inside the sample.', true);
+                render();
+                return;
+            }
+            splits[i] = n;
+            render();
+        };
+        note.onchange = () => {
+            const n = Number(note.value);
+            if (!Number.isInteger(n) || n < 0 || n > 96)
+            {
+                status('Notes must be whole numbers from 0 to 96.', true);
+                note.value = notes[i];
+                return;
+            }
+            notes[i] = n;
+        };
+        el('slices').append(box);
+    }
+    const ready = !!audio;
+    ['play', 'even', 'wav', 'sampleOut'].forEach(id => el(id).disabled = !ready);
+    el('presetOut').disabled = !ready || !baseline;
+    el('apply').disabled = !source;
+    el('duration').textContent = audio ? (audio.length / Plinky.RATE).toFixed(3) : '—';
+    el('frameCount').textContent = audio ? audio.length.toLocaleString() + ' frames' : 'Load audio to begin';
+    el('sampleOut').textContent = '↓ SAMPLE' + el('slot').value + '.UF2';
+    if (typeof renderDrive === 'function')
+    {
+        renderDrive();
+    }
+    draw();
+}
+/** @returns {void} Even slice boundaries. */
+function even()
+{
+    splits = Array.from({length : 8}, (_, i) => Math.floor(i * audio.length / 8));
+    render();
+}
+/** @returns {void} Load current slot metadata when it matches original UF2 audio. */
+function loadMetadata()
+{
+    if (!audio || !baseline || importedSlot !== Number(el('slot').value))
+    {
+        return;
+    }
+    const m = Plinky.metadata(baseline, importedSlot);
+    if (m)
+    {
+        audio = source.slice(0, m.length);
+        splits = m.splits;
+        notes = m.notes;
+        el('pitched').checked = m.pitched;
+        el('loop').value = m.loop;
+        el('trimEnd').value = (audio.length / Plinky.RATE).toFixed(6);
+        status('Matched sample metadata: recorded length, slices, tuning and loop settings restored.');
+    }
+}
+/**
+ * @param {Uint8Array} bytes Download content. @param {string} name Filename. @param {string} type
+ *     MIME. @returns {void}
+ */
+function download(bytes, name, type = 'application/octet-stream')
+{
+    const url = URL.createObjectURL(new Blob([ bytes ], {type})), a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+/** @param {Event} event File selection. @returns {Promise<void>} */
+async function importAudio(event)
+{
+    try
+    {
+        const file = event.target.files[0];
+        if (!file)
+        {
+            return;
+        }
+        status('Reading ' + file.name + '…');
+        stop();
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        let decoded, ufSlot = null;
+        if (/\.uf2$/i.test(file.name))
+        {
+            const image = Plinky.unpack(bytes);
+            if (image.base < 0x40000000)
+            {
+                throw Error('Use the presets input for PRESETS.UF2.');
+            }
+            ufSlot = (image.base - 0x40000000) / Plinky.BANK;
+            decoded = Plinky.pcm(image.data, Plinky.FRAMES);
+        }
+        else
+        {
+            const b = await ctx().decodeAudioData(bytes.buffer.slice(0)),
+                  frames = Math.round(b.duration * Plinky.RATE);
+            if (frames > Plinky.RATE * 600)
+            {
+                throw Error('Please trim source files to less than 10 minutes before importing.');
+            }
+            const offline = new OfflineAudioContext(1, frames, Plinky.RATE),
+                  mono = offline.createBuffer(1, b.length, b.sampleRate), channel = mono.getChannelData(0);
+            for (let j = 0; j < b.numberOfChannels; j++)
+            {
+                const c = b.getChannelData(j);
+                for (let i = 0; i < c.length; i++)
+                {
+                    channel[i] += c[i] / b.numberOfChannels;
+                }
+            }
+            const node = offline.createBufferSource();
+            node.buffer = mono;
+            node.connect(offline.destination);
+            node.start();
+            decoded = (await offline.startRendering()).getChannelData(0).slice();
+        }
+        source = decoded;
+        importedSlot = ufSlot;
+        if (ufSlot !== null)
+        {
+            el('slot').value = ufSlot;
+        }
+        audio = source.length <= Plinky.FRAMES ? source.slice() : null;
+        notes = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
+        splits = [];
+        el('trimStart').value = 0;
+        el('trimEnd').value = (Math.min(source.length, Plinky.FRAMES) / Plinky.RATE).toFixed(6);
+        el('sourceName').textContent = file.name.length > 28 ? file.name.slice(0, 25) + '…' : file.name;
+        el('normalize').checked = false;
+        el('reverse').checked = false;
+        if (audio)
+        {
+            even();
+        }
+        status(audio ? 'Audio ready. Set slices and export.'
+                     : 'Source is longer than 65.536 seconds. Set a trim range and press Apply.');
+        loadMetadata();
+        if (ufSlot !== null && !baseline)
+        {
+            status(
+                'UF2 decoded. Load its matching PRESETS.UF2 for recorded length and slices; currently showing the full slot.');
+        }
+        render();
+    }
+    catch (e)
+    {
+        status(e.message, true);
+    }
+}
+/** @param {Event} event Preset selection. @returns {Promise<void>} */
+async function importPresets(event)
+{
+    try
+    {
+        const file = event.target.files[0];
+        if (!file)
+        {
+            return;
+        }
+        const image = Plinky.unpack(new Uint8Array(await file.arrayBuffer()));
+        if (image.base !== Plinky.PRESET_BASE)
+        {
+            throw Error('This input requires PRESETS.UF2.');
+        }
+        if (!Plinky.pages(image.data).size)
+        {
+            throw Error('No valid version 2 journal pages in presets backup.');
+        }
+        baseline = image.data;
+        el('presetState').textContent = '✓ Backup loaded · ' + Plinky.pages(baseline).size + ' valid objects';
+        status('Presets backup verified.');
+        loadMetadata();
+        render();
+    }
+    catch (e)
+    {
+        status(e.message, true);
+    }
+}
+/** @returns {void} Apply source trim and processing. */
+function apply()
+{
+    try
+    {
+        const start = Math.round(Number(el('trimStart').value) * Plinky.RATE),
+              end = Math.round(Number(el('trimEnd').value) * Plinky.RATE), fadeMs = Number(el('fade').value);
+        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > source.length ||
+            end <= start || end - start > Plinky.FRAMES)
+        {
+            throw Error('Choose a valid trim range of at most 65.536 seconds inside the source.');
+        }
+        if (!Number.isFinite(fadeMs) || fadeMs < 0 || fadeMs > 5000)
+        {
+            throw Error('Fade must be between 0 and 5000 ms.');
+        }
+        stop();
+        const result = source.slice(start, end);
+        if (el('reverse').checked)
+        {
+            result.reverse();
+        }
+        let peak = 0;
+        for (const x of result)
+        {
+            peak = Math.max(peak, Math.abs(x));
+        }
+        const gain = el('normalize').checked && peak > 0 ? Math.pow(10, -1 / 20) / peak : 1,
+              fade = Math.min(Math.floor(fadeMs * 32), Math.floor(result.length / 2));
+        for (let i = 0; i < result.length; i++)
+        {
+            result[i] *= gain * (fade ? Math.min(1, i / fade, (result.length - 1 - i) / fade) : 1);
+        }
+        audio = result;
+        importedSlot = null;
+        even();
+        status('Audio processed. Eight slices spaced evenly; adjust them below.');
+    }
+    catch (e)
+    {
+        status(e.message, true);
+    }
+}
+for (let i = 0; i < 8; i++)
+{
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = 'SAMPLE' + i + '.UF2 · slot ' + (i + 1);
+    el('slot').append(o);
+}
+el('audioFile').onchange = importAudio;
+el('presetFile').onchange = importPresets;
+el('slot').onchange = () => {
+    render();
+    status('Destination changed. Current audio and slices will be written to SAMPLE' + el('slot').value +
+           '.UF2.');
+};
+el('apply').onclick = apply;
+el('play').onclick = () => play().catch(e => status(e.message, true));
+el('stop').onclick = stop;
+el('even').onclick = even;
+el('wav').onclick = () => download(Plinky.wav(audio), 'plinky-sample.wav', 'audio/wav');
+el('sampleOut').onclick = () => {
+    download(Plinky.pack(Plinky.raw(audio), 0x40000000 + Number(el('slot').value) * Plinky.BANK),
+             'SAMPLE' + el('slot').value + '.UF2');
+    status('Sample exported. Also export updated PRESETS.UF2 so Plinky uses the correct length and slices.');
+};
+el('presetOut').onclick = () => {
+    try
+    {
+        const data =
+            Plinky.patch(baseline, Number(el('slot').value), audio,
+                         {splits, notes, pitched : el('pitched').checked, loop : Number(el('loop').value)});
+        download(Plinky.pack(data, Plinky.PRESET_BASE), 'PRESETS.UF2');
+        status('Updated presets exported. Copy this and the corresponding sample UF2 to Plinky.');
+    }
+    catch (e)
+    {
+        status(e.message, true);
+    }
+};
+el('wave').onclick = event => {
+    if (!audio)
+    {
+        return;
+    }
+    const r = el('wave').getBoundingClientRect(),
+          n = Math.round((event.clientX - r.left) / r.width * audio.length),
+          low = selected ? splits[selected - 1] : 0,
+          high = selected === 7 ? audio.length - 1 : splits[selected + 1];
+    splits[selected] = Math.max(low, Math.min(high, n));
+    render();
+};
+window.addEventListener('resize', draw);
+
+/** @file Mounted-drive controls and explicit user-triggered read/write actions. */
+let drive = null, driveBusy = false;
+/** @returns {void} Update mounted-drive control availability. */
+function renderDrive()
+{
+    const supported = typeof window.showDirectoryPicker === 'function' && window.isSecureContext;
+    el('connectDrive').disabled = !supported || driveBusy;
+    el('loadDrive').disabled = !drive || driveBusy;
+    el('backupDrive').disabled = !drive || driveBusy;
+    el('disconnectDrive').disabled = !drive || driveBusy;
+    el('saveDrive').disabled = !drive || !audio || driveBusy;
+    if (!supported)
+    {
+        el('driveState').textContent =
+            'Direct drive access is unavailable in this browser. Open this HTML in a desktop browser with a folder picker, such as Chrome or Edge. File import and download still work here.';
+    }
+}
+/** @param {boolean} busy Whether a drive operation is active. @returns {void} */
+function setDriveBusy(busy)
+{
+    driveBusy = busy;
+    document.querySelector('main').inert = busy;
+    renderDrive();
+}
+/** @param {object} snapshot Original drive files. @param {number} slot Sample slot. @returns {void} */
+function backupSnapshot(snapshot, slot)
+{
+    const bytes = PlinkyDrive.archive([
+        {name : 'SAMPLE' + slot + '.UF2', bytes : snapshot.sampleBytes},
+        {name : 'PRESETS.UF2', bytes : snapshot.presetBytes}
+    ]);
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    download(bytes, 'plinky-backup-slot' + slot + '-' + stamp + '.zip', 'application/zip');
+}
+/** @returns {Promise<void>} Request a drive selection and validate its contents. */
+async function connectDrive()
+{
+    try
+    {
+        const directory = await window.showDirectoryPicker({id : 'plinky-uf2-drive', mode : 'read'});
+        setDriveBusy(true);
+        const session = await PlinkyDrive.connect(directory);
+        drive = session;
+        el('driveState').textContent =
+            'Connected: ' + directory.name + ' · ' + session.slots.length + ' sample slots found.';
+        status(
+            'Plinky drive connected. Load the selected slot, or import new audio and save it to the chosen destination.');
+    }
+    catch (error)
+    {
+        if (error.name !== 'AbortError')
+        {
+            status('Could not connect: ' + error.message, true);
+        }
+    }
+    finally
+    {
+        setDriveBusy(false);
+    }
+}
+/** @returns {Promise<void>} Load the selected sample and matching metadata from the drive. */
+async function loadDriveSlot()
+{
+    try
+    {
+        setDriveBusy(true);
+        const slot = Number(el('slot').value), snapshot = await PlinkyDrive.snapshot(drive, slot);
+        baseline = snapshot.presets.data;
+        el('presetState').textContent = '✓ Fresh presets from ' + drive.directory.name;
+        await importAudio(
+            {target : {files : [ new File([ snapshot.sampleBytes ], 'SAMPLE' + slot + '.UF2') ]}});
+    }
+    catch (error)
+    {
+        status('Drive read failed. Check that Plinky is still mounted in UF2 mode. ' + error.message, true);
+    }
+    finally
+    {
+        setDriveBusy(false);
+    }
+}
+/** @returns {Promise<void>} Download a fresh backup without modifying the drive. */
+async function backupDriveSlot()
+{
+    try
+    {
+        setDriveBusy(true);
+        const slot = Number(el('slot').value), snapshot = await PlinkyDrive.snapshot(drive, slot);
+        backupSnapshot(snapshot, slot);
+        status('Backup ZIP download requested for SAMPLE' + slot +
+               '.UF2 and PRESETS.UF2. Keep it until playback is verified.');
+    }
+    catch (error)
+    {
+        status('Backup failed: ' + error.message, true);
+    }
+    finally
+    {
+        setDriveBusy(false);
+    }
+}
+/** @returns {Promise<void>} Save the prepared sample and patch fresh on-drive metadata. */
+async function saveDriveSlot()
+{
+    if (!drive || !audio)
+    {
+        return;
+    }
+    const slot = Number(el('slot').value);
+    if (!window.confirm(
+            'Write SAMPLE' + slot + '.UF2 and updated PRESETS.UF2 to “' + drive.directory.name +
+            '”?\n\nThis replaces sample slot ' + (slot + 1) + ' (' + (audio.length / Plinky.RATE).toFixed(3) +
+            ' seconds). A backup ZIP download will be requested before writing. Keep Plinky connected until writes finish.'))
+    {
+        return;
+    }
+    try
+    {
+        // Permission is requested immediately from the Save gesture, before reading or processing.
+        const permission = await drive.directory.requestPermission({mode : 'readwrite'});
+        if (permission !== 'granted')
+        {
+            throw Error(
+                'Write permission was not granted. You can still download and copy both UF2 files manually.');
+        }
+        setDriveBusy(true);
+        status('Reading fresh drive backups and preparing both UF2 files…');
+        const snapshot = await PlinkyDrive.snapshot(drive, slot);
+        baseline = snapshot.presets.data;
+        const patched =
+            Plinky.patch(snapshot.presets.data, slot, audio,
+                         {splits, notes, pitched : el('pitched').checked, loop : Number(el('loop').value)});
+        const sampleBytes = Plinky.pack(Plinky.raw(audio), 0x40000000 + slot * Plinky.BANK);
+        const presetBytes = Plinky.pack(patched, Plinky.PRESET_BASE);
+        backupSnapshot(snapshot, slot);
+        await PlinkyDrive.save(drive, slot, sampleBytes, presetBytes, status);
+        baseline = patched;
+        el('presetState').textContent = '✓ Presets updated on ' + drive.directory.name;
+        status(
+            'Both browser write streams finished. Wait for Plinky’s write lights to finish, then press its encoder to restart. Physical flash contents have not been verified.');
+    }
+    catch (error)
+    {
+        status('Save failed: ' + error.message, true);
+    }
+    finally
+    {
+        setDriveBusy(false);
+        render();
+    }
+}
+el('connectDrive').onclick = connectDrive;
+el('loadDrive').onclick = loadDriveSlot;
+el('backupDrive').onclick = backupDriveSlot;
+el('saveDrive').onclick = saveDriveSlot;
+el('disconnectDrive').onclick = () => {
+    drive = null;
+    el('driveState').textContent = 'Disconnected. The USB volume remains mounted on your computer.';
+    renderDrive();
+};
+render();
+
+</script></body></html>
